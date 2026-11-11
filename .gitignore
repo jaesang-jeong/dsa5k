@@ -1,0 +1,22 @@
+# Rust build artifacts
+target/
+**/target/
+**/*.rs.bk
+*.pdb
+
+# Built executables
+DSA5000_Studio.exe
+**/DSA5000_Studio.exe
+*.exe
+
+# Large archives (e.g. VDD driver 71MB)
+*.zip
+vdd/*.zip
+
+# Measurement logs & test records
+data_records/
+test_records/
+*.csv
+
+# Local runtime configuration
+dsa5000_config.json

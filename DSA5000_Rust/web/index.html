@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DSA5000 Studio (Rust Native Edition)</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header Bar -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo">
+        <span class="logo-accent">DSA5000</span> RUST STUDIO
+        <span class="version-tag">RUST v2.0 (Zero-GC)</span>
+      </div>
+      <div id="connBadge" class="status-badge disconnected">DISCONNECTED</div>
+    </div>
+
+    <div class="header-center">
+      <div class="conn-inputs">
+        <label>IP: <input type="text" id="inputHost" value="127.0.0.1"></label>
+        <label>Cmd: <input type="number" id="inputCmdPort" value="2323"></label>
+        <label>Data: <input type="number" id="inputDataPort" value="5503"></label>
+        <label class="sim-toggle-label">
+          <input type="checkbox" id="chkSimulator" checked> 시뮬레이터 모드
+        </label>
+      </div>
+      <button id="btnConnect" class="btn btn-primary">연결 (Connect)</button>
+      <button id="btnDisconnect" class="btn btn-danger" disabled>해제 (Disconnect)</button>
+    </div>
+
+    <div class="header-right">
+      <div class="stat-pill">
+        <span class="stat-label">FPS:</span>
+        <span id="statFps" class="stat-val">0</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-label">Frames:</span>
+        <span id="statFrames" class="stat-val">0</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-label">Loss:</span>
+        <span id="statDropped" class="stat-val stat-good">0</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Control & Status Ribbon -->
+  <section class="ribbon">
+    <!-- Device Info -->
+    <div class="ribbon-card">
+      <div class="card-title">DEVICE INFO (RUST ENGINE)</div>
+      <div class="card-body">
+        <div><strong>Model:</strong> <span id="infoModel">--</span></div>
+        <div><strong>S/N:</strong> <span id="infoSN">--</span></div>
+        <div><strong>Rate:</strong> <span id="infoRate">--</span> Hz</div>
+        <div><strong>Units:</strong> <span id="infoUnits">PSI</span></div>
+      </div>
+    </div>
+
+    <!-- Acquisition Control -->
+    <div class="ribbon-card">
+      <div class="card-title">ACQUISITION CONTROL</div>
+      <div class="card-body btn-group">
+        <button id="btnStartScan" class="btn btn-success" disabled>▶ SCAN 시작</button>
+        <button id="btnStopScan" class="btn btn-warning" disabled>■ SCAN 정지</button>
+        <button id="btnCalz" class="btn btn-secondary" disabled>⚡ 영점 교정 (CALZ)</button>
+      </div>
+    </div>
+
+    <!-- Pneumatic Valve Control -->
+    <div class="ribbon-card">
+      <div class="card-title">SOLENOID VALVE CONTROL</div>
+      <div class="card-body">
+        <div class="valve-status">
+          상태: <span id="valveStatusText" class="valve-highlight">PX (계측 모드)</span>
+        </div>
+        <div class="btn-group valve-btn-group">
+          <button class="btn btn-sm btn-valve active" data-valve="PX">Px (계측)</button>
+          <button class="btn btn-sm btn-valve" data-valve="CAL">Cal (교정)</button>
+          <button class="btn btn-sm btn-valve" data-valve="PRG">Prg (퍼지)</button>
+          <button class="btn btn-sm btn-valve" data-valve="OFF">Off (차단)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Logging -->
+    <div class="ribbon-card">
+      <div class="card-title">DATA LOGGING (CSV)</div>
+      <div class="card-body">
+        <div class="log-status">
+          <span id="logStatusText">대기 중</span>
+          <span id="logFrameCount" class="log-count"></span>
+        </div>
+        <div class="btn-group">
+          <input type="text" id="logFileName" placeholder="파일명 (기본: Scan)" class="input-sm">
+          <button id="btnStartLog" class="btn btn-sm btn-record" disabled>● 기록 시작</button>
+          <button id="btnStopLog" class="btn btn-sm btn-secondary" disabled>■ 기록 종료</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Extra Tools -->
+    <div class="ribbon-card ribbon-tools">
+      <div class="card-title">SYSTEM TOOLS</div>
+      <div class="card-body btn-group-vertical">
+        <button id="btnOpenTerminal" class="btn btn-sm btn-outline">터미널 (Telnet)</button>
+        <button id="btnOpenSettings" class="btn btn-sm btn-outline">설정 (Settings)</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Measurement Workspace -->
+  <main class="workspace">
+    <!-- Left: Waveform Chart -->
+    <section class="chart-section">
+      <div class="section-header">
+        <div class="section-title">실시간 압력 파형 (Real-Time Pressure Waveforms - 60 FPS)</div>
+        <div class="chart-controls">
+          <label>시간 범위:
+            <select id="selTimeRange">
+              <option value="1">1 초</option>
+              <option value="2">2 초</option>
+              <option value="5" selected>5 초</option>
+              <option value="10">10 초</option>
+              <option value="30">30 초</option>
+            </select>
+          </label>
+          <label><input type="checkbox" id="chkAutoScale" checked> 자동 스케일 (Auto-Scale)</label>
+          <button id="btnPauseChart" class="btn btn-sm btn-secondary">일시 정지</button>
+          <button id="btnResetChart" class="btn btn-sm btn-secondary">초기화</button>
+        </div>
+      </div>
+
+      <!-- Channel Toggle Chips -->
+      <div id="channelChips" class="channel-chips">
+        <!-- Ch1..Ch16 toggles will be generated dynamically -->
+      </div>
+
+      <!-- Canvas Plot -->
+      <div class="canvas-container">
+        <canvas id="waveformCanvas"></canvas>
+      </div>
+    </section>
+
+    <!-- Right: Live Channel Bar Meters & Summary Table -->
+    <section class="meters-section">
+      <div class="section-header">
+        <div class="section-title">채널별 압력 바 게이지 (16 Channels)</div>
+      </div>
+      <div id="barMetersContainer" class="bar-meters-grid">
+        <!-- 16 Bar meters generated dynamically -->
+      </div>
+
+      <div class="section-header table-header">
+        <div class="section-title">실시간 통계 요약 (Statistics)</div>
+      </div>
+      <div class="table-container">
+        <table class="stats-table">
+          <thead>
+            <tr>
+              <th>Ch</th>
+              <th>Current</th>
+              <th>Mean</th>
+              <th>Min</th>
+              <th>Max</th>
+              <th>ΔP (P-P)</th>
+              <th>RMS Noise</th>
+            </tr>
+          </thead>
+          <tbody id="statsTableBody">
+            <!-- 16 Rows generated dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Terminal Modal -->
+  <div id="modalTerminal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>DSA5000 Telnet Terminal (Port 23)</h3>
+        <button class="modal-close" id="btnCloseTerminal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="terminalOutput" class="terminal-box"></div>
+        <div class="terminal-input-bar">
+          <input type="text" id="terminalInput" placeholder="명령어 입력 (예: STATUS, LIST SYS, MODEL, SET RATE 500, CALZ)...">
+          <button id="btnSendTerminal" class="btn btn-primary">전송 (Send)</button>
+        </div>
+        <div class="terminal-quick-btns">
+          <span>빠른 명령:</span>
+          <button class="btn btn-xs btn-outline" data-cmd="STATUS">STATUS</button>
+          <button class="btn btn-xs btn-outline" data-cmd="LIST SYS">LIST SYS</button>
+          <button class="btn btn-xs btn-outline" data-cmd="MODEL">MODEL</button>
+          <button class="btn btn-xs btn-outline" data-cmd="SET VALVE PX">VALVE PX</button>
+          <button class="btn btn-xs btn-outline" data-cmd="SET VALVE CAL">VALVE CAL</button>
+          <button class="btn btn-xs btn-outline" data-cmd="CALZ">CALZ</button>
+          <button class="btn btn-xs btn-outline" data-cmd="SAVE">SAVE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="modalSettings" class="modal">
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <h3>계측기 파라미터 설정 (Rust Engine)</h3>
+        <button class="modal-close" id="btnCloseSettings">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>스캔 레이트 (Scan Rate Hz):</label>
+          <select id="cfgRate">
+            <option value="10">10 Hz</option>
+            <option value="50">50 Hz</option>
+            <option value="100" selected>100 Hz</option>
+            <option value="250">250 Hz</option>
+            <option value="500">500 Hz</option>
+            <option value="1000">1000 Hz</option>
+            <option value="2000">2000 Hz</option>
+            <option value="5000">5000 Hz</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>엔지니어링 단위 (Engineering Units):</label>
+          <select id="cfgUnits">
+            <option value="PSI" selected>PSI (Pounds per Square Inch)</option>
+            <option value="KPA">kPa (Kilopascals)</option>
+            <option value="BAR">bar</option>
+            <option value="MBAR">mbar</option>
+            <option value="INH2O">inH2O (Inches of Water)</option>
+            <option value="MMHG">mmHg (Millimeters of Mercury)</option>
+            <option value="ATM">atm (Atmospheres)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btnApplySettings" class="btn btn-primary">적용 (Apply)</button>
+        <button id="btnCancelSettings" class="btn btn-secondary">취소</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Calz Progress Modal -->
+  <div id="modalCalz" class="modal">
+    <div class="modal-content modal-sm text-center">
+      <div class="modal-header">
+        <h3>영점 교정 진행 중 (CALZ)</h3>
+      </div>
+      <div class="modal-body">
+        <div class="spinner"></div>
+        <div id="calzStatusText" class="mt-2">공압 밸브 전환 및 센서 오프셋 영점화 수행 중...</div>
+        <div class="progress-bar-bg mt-2">
+          <div id="calzProgressBar" class="progress-bar-fill" style="width: 10%;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
