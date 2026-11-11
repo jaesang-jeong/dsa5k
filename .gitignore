@@ -5,9 +5,8 @@ target/
 *.pdb
 
 # Built executables
-DSA5000_Studio.exe
-**/DSA5000_Studio.exe
 *.exe
+!/DSA5000_Studio.exe
 
 # Large archives (e.g. VDD driver 71MB)
 *.zip
