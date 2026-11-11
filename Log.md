@@ -223,3 +223,14 @@
 2. 검증:
    - `git push -u origin main` → `https://github.com/jaesang-jeong/dsa5k.git` (main -> main) 푸시 성공 (100% 완료)
 3. 미해결 / 제안: 없음
+
+
+## 2026-11-11 19:28 — 스탠드얼론 실행파일(DSA5000_Studio.exe) GitHub 원격 저장소 푸시 완료
+
+[DONE]
+1. 수정 파일:
+   - .gitignore : DSA5000_Studio.exe 실행파일 Git 추적 허용 설정
+2. 검증:
+   - `.\DSA5000_Studio.exe --test` → 8개 자동 통합 테스트 100% 통과 (SSEP 토폴로지, 밸브 제어, CALZ, 503 바이너리 스트리밍, 단독/다중 모드, SSEP 0/1/2/3/4 및 SAVE 명령, 통계 분석)
+   - `git add .gitignore DSA5000_Studio.exe`, `git commit`, `git push origin main` → `https://github.com/jaesang-jeong/dsa5k.git` (main -> main) 6.39MB 단일 실행파일 푸시 완료 (482ee21)
+3. 미해결 / 제안: 없음
