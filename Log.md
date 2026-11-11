@@ -201,3 +201,15 @@
    - `.\DSA5000_Studio.exe --test` → 8개 자동 통합 테스트 100% 통과 (PTP 패킷 스트리밍, SSEP 0~4 설정/SAVE, 멀티모듈 데이터 무손실 검증)
    - `.\DSA5000_Studio.exe --device 191.30.130.5,191.30.130.6` → 실기기 2대(32채널) 1,401프레임 무손실 연속 스트리밍 100% 정상 수신 검증
 3. 미해결 / 제안: 없음
+
+
+## 2026-11-11 19:15 — Git 로컬 리포지토리 초기화, .gitignore 작성 및 GitHub 원격(https://github.com/jaesang-jeong/dsa5k) 연동 초기 커밋 완료
+
+[DONE]
+1. 수정 파일:
+   - .gitignore : 빌드 산출물(target/, *.exe), 대용량 zip(vdd/*.zip), 계측 로그(data_records/, *.csv), 로컬 설정 제외 설정
+2. 검증:
+   - `git init`, `git branch -M main`, `git commit` → 52개 파일(14,258줄) 커밋 완료 (2c53d93)
+   - `git remote add origin https://github.com/jaesang-jeong/dsa5k.git` → 원격 저장소 연동 완료
+3. 미해결 / 제안:
+   - GitHub 원격 푸시 인증(Personal Access Token 입력 또는 대화형 터미널에서 git push -u origin main 실행)
