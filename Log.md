@@ -213,3 +213,13 @@
    - `git remote add origin https://github.com/jaesang-jeong/dsa5k.git` → 원격 저장소 연동 완료
 3. 미해결 / 제안:
    - GitHub 원격 푸시 인증(Personal Access Token 입력 또는 대화형 터미널에서 git push -u origin main 실행)
+
+
+## 2026-11-11 19:23 — GitHub 원격 저장소(https://github.com/jaesang-jeong/dsa5k) main 브랜치 푸시 완료
+
+[DONE]
+1. 수정 파일:
+   - .gitignore : 빌드 산출물 및 불필요 파일 제외 설정
+2. 검증:
+   - `git push -u origin main` → `https://github.com/jaesang-jeong/dsa5k.git` (main -> main) 푸시 성공 (100% 완료)
+3. 미해결 / 제안: 없음
